@@ -1,6 +1,7 @@
 package guru.sfg.beer.order.service.sm;
 
 import guru.sfg.beer.order.service.BeerOrderManagerImpl;
+import guru.sfg.beer.order.service.domain.BeerOrder;
 import guru.sfg.beer.order.service.domain.BeerOrderEventEnum;
 import guru.sfg.beer.order.service.domain.BeerOrderStatusEnum;
 import guru.sfg.beer.order.service.repositories.BeerOrderRepository;
@@ -25,10 +26,14 @@ public class BeerOrderStateChangeInterceptor extends StateMachineInterceptorAdap
 
     @Override
     public void preStateChange(State<BeerOrderStatusEnum, BeerOrderEventEnum> state, Message<BeerOrderEventEnum> message, Transition<BeerOrderStatusEnum, BeerOrderEventEnum> transition, StateMachine<BeerOrderStatusEnum, BeerOrderEventEnum> stateMachine) {
-        Optional.ofNullable(message).flatMap(msg ->
-                Optional.ofNullable((String) msg.getHeaders().getOrDefault(BeerOrderManagerImpl.ORDER_ID_HEADER, " ")))
+        log.debug("Pre-State Change");
+
+        Optional.ofNullable(message)
+                .flatMap(msg -> Optional.ofNullable((String) msg.getHeaders().getOrDefault(BeerOrderManagerImpl.ORDER_ID_HEADER, " ")))
                 .ifPresent(orderId -> {
-                    var beerOrder = beerOrderRepository.getOne(UUID.fromString(orderId));
+                    log.debug("Saving state for order id: " + orderId + " Status: " + state.getId());
+
+                    BeerOrder beerOrder = beerOrderRepository.getOne(UUID.fromString(orderId));
                     beerOrder.setOrderStatus(state.getId());
                     beerOrderRepository.saveAndFlush(beerOrder);
                 });
