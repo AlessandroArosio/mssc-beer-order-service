@@ -10,6 +10,8 @@ import org.springframework.jms.core.JmsTemplate;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
 
+import java.util.Objects;
+
 @Slf4j
 @RequiredArgsConstructor
 @Component
@@ -18,13 +20,19 @@ public class BeerOrderValidationListener {
 
     @JmsListener(destination = JmsConfig.VALIDATE_ORDER_QUEUE)
     public void list(Message msg) {
+        boolean isValid = true;
 
         var request = (ValidateOrderRequest) msg.getPayload();
+
+        // condition to fail validation
+        if (Objects.equals(request.getBeerOrder().getCustomerRef(), "fail-validation")) {
+            isValid = false;
+        }
 
         jmsTemplate.convertAndSend(JmsConfig.VALIDATE_ORDER_RESPONSE_QUEUE,
                 ValidateOrderResult.builder()
                         .orderId(request.getBeerOrder().getId())
-                        .isValid(true)
+                        .isValid(isValid)
                         .build());
     }
 }
