@@ -21,18 +21,23 @@ public class BeerOrderValidationListener {
     @JmsListener(destination = JmsConfig.VALIDATE_ORDER_QUEUE)
     public void list(Message msg) {
         boolean isValid = true;
+        boolean sendResponse = true;
 
         var request = (ValidateOrderRequest) msg.getPayload();
 
         // condition to fail validation
         if (Objects.equals(request.getBeerOrder().getCustomerRef(), "fail-validation")) {
             isValid = false;
+        } else if (Objects.equals(request.getBeerOrder().getCustomerRef(), "dont-validate")) {
+            sendResponse = false;
         }
 
-        jmsTemplate.convertAndSend(JmsConfig.VALIDATE_ORDER_RESPONSE_QUEUE,
-                ValidateOrderResult.builder()
-                        .orderId(request.getBeerOrder().getId())
-                        .isValid(isValid)
-                        .build());
+        if (sendResponse) {
+            jmsTemplate.convertAndSend(JmsConfig.VALIDATE_ORDER_RESPONSE_QUEUE,
+                    ValidateOrderResult.builder()
+                            .orderId(request.getBeerOrder().getId())
+                            .isValid(isValid)
+                            .build());
+        }
     }
 }
