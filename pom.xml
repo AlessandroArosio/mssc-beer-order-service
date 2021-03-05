@@ -16,6 +16,10 @@
 
     <description>MSSC Beer Order Service</description>
 
+    <properties>
+        <docker.image.prefix>alessandroarosio</docker.image.prefix>
+    </properties>
+
     <licenses>
         <license>
             <name>GNU General Public License v3.0</name>
